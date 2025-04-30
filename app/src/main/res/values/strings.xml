@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">CustomGesturesApp</string>
+    <string name="sample_content_description">A sample image of a dog</string>
+</resources>
