@@ -10,7 +10,6 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -54,8 +53,8 @@ fun CustomGestures(modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
-        CustomGestures()
+fun CustomGesturesPreview() {
+    CustomGestures()
 }
 @Composable
 fun ImageWithGestures(modifier: Modifier = Modifier) {
@@ -88,59 +87,45 @@ fun ImageWithGestures(modifier: Modifier = Modifier) {
             .graphicsLayer {
                 translationX = -offset.x * zoom
                 translationY = -offset.y * zoom
-                transformOrigin = TransformOrigin(0f, 0f)
                 scaleX = zoom; scaleY = zoom
+                transformOrigin = TransformOrigin(0f, 0f)
             })
 }
+
+// Calculates double-tap gesture offset
 fun Offset.calculateDoubleTapOffset(newZoom: Float,
                                     previousZoom: Float, size: IntSize, tapOffset: Offset
 ): Offset {
-
-    // 1. Calculate the change in offset due to the zoom.
-    //    - tapOffset / previousZoom: The tap position relative to the content at the previous zoom.
-    //    - tapOffset / newZoom: The tap position relative to the content at the new zoom.
-    //    - The difference between these two is the change in offset needed to keep the tap position
-    //      under the same point in the content.
+    // Tracks tap and zoom offsets relative to the point of each transformation
     val zoomOffsetChange = (tapOffset / previousZoom) - (tapOffset / newZoom)
-
-    // 2. Calculate the new offset by adding the change to the current offset.
     val newOffset = this  + zoomOffsetChange
 
-    // 3. Calculate the visible area of the content at the new zoom level.
+    // Accumulates current offset with change
     val visibleWidth = size.width / newZoom
     val visibleHeight = size.height / newZoom
 
-    // 4. Calculate the maximum allowed offset in each direction.
-    //    - If the visible area is larger than the content, the max offset is 0 (no scrolling needed).
-    //    - Otherwise, it's the difference between the content size and the visible area.
+    // Calculates maxOffset to keep the transformed image within visible bounds
     val maxOffsetX = max(0f, size.width - visibleWidth)
     val maxOffsetY = max(0f, size.height - visibleHeight)
 
-    // 5. Ensure the new offset stays within the allowed bounds.
     return Offset(newOffset.x.coerceIn(0f, maxOffsetX), newOffset.y.coerceIn(0f, maxOffsetY))
 }
 
+// Combines the calculation of drag-to-pan and pinch-to-zoom offsets
 fun Offset.calculatePinchDragOffset(
     centroid: Offset, pan: Offset, oldZoom: Float, newZoom: Float, size: IntSize
 ): Offset {
-    //calculate zoom change
-    // The centroid is the point of focus for the zoom. We use the difference between the centroid's
-    // position at the old zoom and the new zoom to calculate how the offset should change.
+    // Calculates multiple gesture offsets
     val zoomOffset = centroid / oldZoom - centroid / newZoom
-
-    // Calculate the pan change relative to the old zoom.
-    // pan is the change in the gesture's position, so we need to adjust it by the old zoom to
-    // figure out how much it moved relative to the content.
     val panOffset = pan / oldZoom
 
-    // Calculate the new offset by applying the zoom and pan changes to the current offset.
-    // This is the new position of the top-left corner of the visible content.
+    // Applies zoom and pan changes to new offset
     val newOffset = this + zoomOffset - panOffset
 
-    // Calculate the maximum allowed offset in each direction.
-    // It's the difference between the content size and the visible area.
+    // Calculates maxOffset to keep the transformed image within visible bounds
     val maxOffsetX = (size.width / oldZoom) * (oldZoom - 1f)
     val maxOffsetY = (size.height / oldZoom) * (oldZoom - 1f)
+
     return Offset(
         newOffset.x.coerceIn(0f, maxOffsetX), newOffset.y.coerceIn(0f, maxOffsetY)
     )
