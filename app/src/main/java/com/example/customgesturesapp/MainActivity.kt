@@ -83,7 +83,6 @@ fun ImageWithGestures(modifier: Modifier = Modifier) {
                     val newZoom = if (zoom > 1f) 1f else 2f
                     offset = offset.calculateDoubleTapOffset(newZoom, zoom, size, tapOffset)
                     zoom = newZoom
-//                    offset /= zoom
                 })
             }
             .graphicsLayer {
